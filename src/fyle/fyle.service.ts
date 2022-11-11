@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import { SharedService } from 'src/shared/shared.service';
 import { FyleRepository } from './fyle.repository';
-import fs from 'fs';
+import { unlinkSync, writeFileSync } from 'fs';
 import os from 'os';
 import path, { extname, join } from 'path';
 import { Environment } from './enums/environment.enum';
 import { Base64FyleUploadDto } from './dto/base64-fyle-upload.dto';
+import { CreateFyleDto } from './dto/create-fyle.dto';
 
 @Injectable()
 export class FyleService extends SharedService<FyleRepository> {
@@ -19,13 +20,13 @@ export class FyleService extends SharedService<FyleRepository> {
     accountID: string,
     file: Express.Multer.File,
   ) {
-    const fyleDto = this.buildImageResponse(request, accountID, file.filename);
+    const fyleDto = this.buildImageResponse(request, accountID, file);
 
     // Save to the database
     try {
       return this.repo.create(fyleDto);
     } catch (e) {
-      fs.unlinkSync(file.path);
+      unlinkSync(file.path);
       throw new Error(e.toString());
     }
   }
@@ -36,32 +37,32 @@ export class FyleService extends SharedService<FyleRepository> {
     files: Array<Express.Multer.File>,
   ) {
     const fyleBulkDto = files.map((file) => {
-      return this.buildImageResponse(request, accountID, file.filename);
+      return this.buildImageResponse(request, accountID, file);
     });
 
-    return this.repo.create(fyleBulkDto);
+    return this.repo.bulkCreate(fyleBulkDto);
   }
 
   public buildImageResponse(
     request: Request,
     accountID: string,
-    filename: string,
+    file: Express.Multer.File,
   ) {
-    const fileUrl = this.getFileLink(request, accountID, filename);
+    const fileUrl = this.getFileLink(request, accountID, file.filename);
 
     return {
-      name: request.file.filename,
-      originalName: request.file.originalname,
-      path: request.file.path,
-      extension: extname(request.file.filename),
+      name: file.filename,
+      originalName: file.originalname,
+      path: file.path,
+      extension: extname(file.filename),
       url: fileUrl,
-      mimeType: request.file.mimetype,
+      mimeType: file.mimetype,
       accountID,
       environment:
         request.headers['x-environment'] ||
         process.env.NODE_ENV ||
         Environment.development,
-    };
+    } as CreateFyleDto;
   }
 
   public getFileLink(request: Request, accountID: string, filename: string) {
@@ -74,13 +75,13 @@ export class FyleService extends SharedService<FyleRepository> {
     files: Array<Base64FyleUploadDto>,
   ) {
     const uploadPath = join(os.homedir(), 'croft', accountID);
-    const fyleBulkDto = [];
+    const fyleBulkDto: CreateFyleDto[] = [];
     files.forEach((file) => {
       const fileName =
         Date.now() + '-' + Math.round(Math.random() * 1e9) + extname(file.name);
       const finalUploadPath = `${uploadPath}/${fileName}`;
-      fs.writeFileSync(finalUploadPath, file.file, { encoding: 'base64' });
-      const fyleDto = {
+      writeFileSync(finalUploadPath, file.file, { encoding: 'base64' });
+      const fyleDto: CreateFyleDto = {
         name: fileName,
         originalName: file.name.split('.')[0],
         path: finalUploadPath,
@@ -95,7 +96,7 @@ export class FyleService extends SharedService<FyleRepository> {
       };
       fyleBulkDto.push(fyleDto);
     });
-    return this.repo.create(fyleBulkDto);
+    return this.repo.bulkCreate(fyleBulkDto);
   }
 
   public async findAll(accountID: string) {
@@ -116,28 +117,32 @@ export class FyleService extends SharedService<FyleRepository> {
       return false;
     }
 
-    fs.unlinkSync(fyle.path);
+    unlinkSync(fyle.path);
 
-    return this.repo.deleteOne({ _id: fyle, accountID });
+    return this.repo.delete({ _id: fyle, accountID });
   }
 
   public async deleteMany(accountID: string, fyleNames: string[]) {
+    if (fyleNames.length === 0) {
+      return false;
+    }
+
     const fyles = await this.repo.find({
       name: { $in: fyleNames },
       accountID,
     });
 
-    if (!fyles.length) {
+    if (fyles.length === 0) {
       return false;
     }
 
     Promise.all(
       fyles.map((fyle) => {
-        fs.unlinkSync(fyle.path);
+        if (fyle) unlinkSync(fyle.path);
       }),
     );
 
-    return this.repo.deleteOne({
+    return this.repo.delete({
       name: { $in: fyleNames },
       accountID,
     });

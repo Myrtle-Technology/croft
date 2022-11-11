@@ -103,7 +103,7 @@ export class SharedRepository<
     });
   }
 
-  public async updateOne(
+  public async update(
     filter: FilterQuery<Entity>,
     dto: UpdateDto,
     options?: QueryOptions<Entity>,
@@ -119,7 +119,7 @@ export class SharedRepository<
     return this.model.findByIdAndRemove(id, options);
   }
 
-  public async deleteOne(
+  public async delete(
     filter: FilterQuery<Entity>,
     options?: QueryOptions<Entity>,
   ) {

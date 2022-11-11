@@ -57,11 +57,11 @@ export class AccountService extends SharedService<AccountRepository> {
   }
 
   public async update(id: string, dto: UpdateAccountDto) {
-    return this.repo.updateOne({ _id: id }, dto);
+    return this.repo.update({ _id: id }, dto);
   }
 
   public async remove(id: string) {
-    return this.repo.deleteOne({ _id: id });
+    return this.repo.delete({ _id: id });
   }
 
   private createAccountDirectory(

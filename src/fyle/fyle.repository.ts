@@ -15,4 +15,10 @@ export class FyleRepository extends SharedRepository<
   constructor(@InjectModel(Fyle.name) model: Model<Fyle>) {
     super(model);
   }
+
+  public async bulkCreate(fyleBulkDto: CreateFyleDto[]) {
+    const fyles = await this.model.create(fyleBulkDto);
+    await this.model.bulkSave(fyles);
+    return fyles;
+  }
 }
