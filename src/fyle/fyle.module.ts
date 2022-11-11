@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { FyleSchema } from './schemas/fyle.schema';
 import { MulterModule } from '@nestjs/platform-express';
 import { fyleStorageEngine } from './fyle.storage-engine';
+import { FyleRepository } from './fyle.repository';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { fyleStorageEngine } from './fyle.storage-engine';
     }),
   ],
   controllers: [FyleController],
-  providers: [FyleService],
+  providers: [FyleService, FyleRepository],
+  exports: [FyleService, FyleRepository],
 })
 export class FyleModule {}

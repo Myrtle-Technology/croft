@@ -1,9 +1,9 @@
-import multer from 'multer';
+import { diskStorage } from 'multer';
 import * as os from 'os';
 import { extname, join } from 'path';
 import { Account } from 'src/account/schemas/account.schema';
 
-export const fyleStorageEngine = multer.diskStorage({
+export const fyleStorageEngine = diskStorage({
   destination: function (request, file, cb) {
     const account = (request as any).user as Account;
     const uploadPath = join(os.homedir(), 'croft', account.accountID);

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
-import { AccountService } from 'src/account/account.service';
 import { SharedService } from 'src/shared/shared.service';
 import { FyleRepository } from './fyle.repository';
 import fs from 'fs';
@@ -11,10 +10,7 @@ import { Base64FyleUploadDto } from './dto/base64-fyle-upload.dto';
 
 @Injectable()
 export class FyleService extends SharedService<FyleRepository> {
-  constructor(
-    readonly repo: FyleRepository,
-    private readonly accountService: AccountService,
-  ) {
+  constructor(readonly repo: FyleRepository) {
     super(repo);
   }
 
@@ -57,7 +53,7 @@ export class FyleService extends SharedService<FyleRepository> {
       name: request.file.filename,
       originalName: request.file.originalname,
       path: request.file.path,
-      extension: path.extname(request.file.filename),
+      extension: extname(request.file.filename),
       url: fileUrl,
       mimeType: request.file.mimetype,
       accountID,

@@ -1,7 +1,8 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Response } from '@nestjs/common';
 import { AppService } from './app.service';
 import { FyleService } from './fyle/fyle.service';
 import { IsPublic } from './shared/decorators/is-public.decorator';
+import { Response as EResponse } from 'express';
 
 @Controller()
 export class AppController {
@@ -12,16 +13,18 @@ export class AppController {
 
   @IsPublic()
   @Get()
-  getHello(): string {
+  public getHello(): string {
     return this.appService.getHello();
   }
 
   @IsPublic()
   @Get('/a/:accountID/f/:fileName')
-  findOne(
+  public async findOne(
     @Param('accountID') accountID: string,
     @Param('fileName') fileName: string,
+    @Response() res: EResponse,
   ) {
-    return this.fyleService.findOne(accountID, fileName);
+    const fyle = await this.fyleService.findOne(accountID, fileName);
+    return res.sendFile(fyle.path);
   }
 }
