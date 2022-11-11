@@ -31,6 +31,10 @@ export class Fyle extends Document {
   public accountID: string;
 
   @ApiProperty()
+  @Prop()
+  public url: string;
+
+  @ApiProperty()
   @Prop({ enum: Environment, default: Environment.development, type: String })
   public environment: Environment;
 }
