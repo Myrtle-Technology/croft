@@ -12,7 +12,7 @@ import { FyleRepository } from './fyle.repository';
     MongooseModule.forFeature([{ name: 'Fyle', schema: FyleSchema }]),
     MulterModule.register({
       storage: fyleStorageEngine,
-      limits: { fileSize: 1073741824 }, // 1GB
+      limits: { fileSize: Infinity }, // 1GB
     }),
   ],
   controllers: [FyleController],
